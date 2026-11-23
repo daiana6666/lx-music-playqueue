@@ -1,0 +1,143 @@
+type WarpSyncHandlerActions<Socket, Actions> = {
+  [K in keyof Actions]: (...args: [Socket, ...Parameters<Actions[K]>]) => ReturnType<Actions[K]>
+}
+
+declare namespace LX {
+  namespace Sync {
+    interface ProfileSnapshot {
+      version: 1
+      listIds: string[]
+      profiles: Record<string, LX.List.UserListProfile>
+    }
+    type ServerSyncListProfileActions = WarpPromiseRecord<{
+      profile_sync_request: () => void
+    }>
+    type ClientSyncListProfileActions = WarpPromiseRecord<{
+      profile_sync_get: () => ProfileSnapshot
+      profile_sync_apply: (base: ProfileSnapshot, next: ProfileSnapshot) => ProfileSnapshot
+      profile_sync_finished: () => void
+    }>
+    type ServerSyncActions = WarpPromiseRecord<{
+      onFeatureChanged: (feature: EnabledFeatures) => void
+    }>
+    type ServerSyncHandlerActions<Socket> = WarpSyncHandlerActions<Socket, ServerSyncActions>
+
+    type ServerSyncListActions = WarpPromiseRecord<{
+      onListSyncAction: (action: LX.Sync.List.ActionList) => void
+    }>
+    type ServerSyncHandlerListActions<Socket> = WarpSyncHandlerActions<Socket, ServerSyncListActions>
+
+    type ServerSyncDislikeActions = WarpPromiseRecord<{
+      onDislikeSyncAction: (action: LX.Sync.Dislike.ActionList) => void
+    }>
+    type ServerSyncHandlerDislikeActions<Socket> = WarpSyncHandlerActions<Socket, ServerSyncDislikeActions>
+
+    type ServerSyncUserApiActions = WarpPromiseRecord<{
+      user_api_get_meta: () => LX.Sync.UserApi.Meta
+      user_api_pull: (mode: LX.Sync.UserApi.SyncMode, data?: LX.Sync.UserApi.Data) => LX.Sync.UserApi.Data
+      user_api_push: (data: LX.Sync.UserApi.Data, mode: LX.Sync.UserApi.SyncMode) => LX.Sync.UserApi.Meta
+    }>
+    type ServerSyncHandlerUserApiActions<Socket> = WarpSyncHandlerActions<Socket, ServerSyncUserApiActions>
+
+    type ServerSyncPartyActions = WarpPromiseRecord<{
+      party_room_resolve: (input: {
+        roomId?: string
+        roomCode?: string
+      }) => LX.Party.RoomSummary | null
+      party_room_create: (input: {
+        name?: string
+        roomCode?: string
+        password?: string
+        controlMode?: LX.Party.RoomControlMode
+        maxMembers?: number
+        displayName?: string
+      }) => LX.Party.RoomSnapshot
+      party_room_join: (input: {
+        roomId?: string
+        roomCode?: string
+        password?: string
+        displayName?: string
+      }) => LX.Party.RoomSnapshot
+      party_room_leave: () => void
+      party_room_dismiss: () => void
+      party_room_get_current: () => LX.Party.RoomSnapshot | null
+      party_room_update: (input: {
+        name?: string
+        password?: string | null
+        controlMode?: LX.Party.RoomControlMode
+        maxMembers?: number
+      }) => LX.Party.RoomSnapshot
+      party_room_transfer_owner: (targetClientId: string) => LX.Party.RoomSnapshot
+      party_member_update: (input: {
+        displayName?: string
+        isReady?: boolean
+        isLoading?: boolean
+      }) => LX.Party.RoomSnapshot
+      party_member_remove: (targetClientId: string) => LX.Party.RoomSnapshot
+      party_playback_update: (input: {
+        currentMusic?: LX.Music.MusicInfo | null
+        currentIndex?: number
+        playing?: boolean
+        progress?: number
+        progressAt?: number
+        duration?: number | null
+        rate?: number
+        queue?: LX.Party.QueueItemInput[]
+      }) => LX.Party.RoomSnapshot
+      party_queue_set: (queue: LX.Party.QueueItemInput[]) => LX.Party.RoomSnapshot
+      party_queue_append: (queue: LX.Party.QueueItemInput[]) => LX.Party.RoomSnapshot
+      party_queue_remove: (ids: string[]) => LX.Party.RoomSnapshot
+      party_queue_move: (input: {
+        id: string
+        position: number
+      }) => LX.Party.RoomSnapshot
+      party_ping: (input?: {
+        displayName?: string
+        isReady?: boolean
+        isLoading?: boolean
+      }) => LX.Party.RoomSnapshot | null
+    }>
+    type ServerSyncHandlerPartyActions<Socket> = WarpSyncHandlerActions<Socket, ServerSyncPartyActions>
+
+    type ClientSyncActions = WarpPromiseRecord<{
+      getEnabledFeatures: (serverType: ServerType, supportedFeatures: SupportedFeatures) => EnabledFeatures
+      finished: () => void
+    }>
+    type ClientSyncHandlerActions<Socket> = WarpSyncHandlerActions<Socket, ClientSyncActions>
+
+    type ClientSyncListActions = WarpPromiseRecord<{
+      onListSyncAction: (action: LX.Sync.List.ActionList) => void
+      list_sync_get_md5: () => string
+      list_sync_get_sync_mode: () => LX.Sync.List.SyncMode
+      list_sync_get_list_data: () => LX.Sync.List.ListData
+      list_sync_set_list_data: (data: LX.Sync.List.ListData) => void
+      list_sync_finished: () => void
+    }>
+    type ClientSyncHandlerListActions<Socket> = WarpSyncHandlerActions<Socket, ClientSyncListActions>
+
+    type ClientSyncDislikeActions = WarpPromiseRecord<{
+      onDislikeSyncAction: (action: LX.Sync.Dislike.ActionList) => void
+      dislike_sync_get_md5: () => string
+      dislike_sync_get_sync_mode: () => LX.Sync.Dislike.SyncMode
+      dislike_sync_get_list_data: () => LX.Dislike.DislikeRules
+      dislike_sync_set_list_data: (data: LX.Dislike.DislikeRules) => void
+      dislike_sync_finished: () => void
+    }>
+    type ClientSyncHandlerDislikeActions<Socket> = WarpSyncHandlerActions<Socket, ClientSyncDislikeActions>
+
+    type ClientSyncUserApiActions = WarpPromiseRecord<{
+      onUserApiSyncAction: (action: LX.Sync.UserApi.ActionList) => void
+      user_api_sync_finished: () => void
+    }>
+    type ClientSyncHandlerUserApiActions<Socket> = WarpSyncHandlerActions<Socket, ClientSyncUserApiActions>
+
+    type ClientSyncPartyActions = WarpPromiseRecord<{
+      onPartySyncAction: (action: LX.Party.SyncAction) => void
+      party_sync_set_room_state: (room: LX.Party.RoomSnapshot | null) => void
+      party_sync_finished: () => void
+    }>
+    type ClientSyncHandlerPartyActions<Socket> = WarpSyncHandlerActions<Socket, ClientSyncPartyActions>
+  }
+}
+
+
