@@ -21,6 +21,18 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
 
+      - name: Verify JS bundle is embedded
+        shell: bash
+        run: |
+          APK=$(find android/app/build/outputs/apk/debug -name '*universal*.apk' | head -1)
+          echo "APK: $APK"
+          if unzip -l "$APK" | grep -q 'index.android.bundle'; then
+            echo "OK: JS bundle embedded (theme + playqueue included)"
+          else
+            echo "ERROR: JS bundle MISSING from APK!"
+            exit 1
+          fi
+
       - name: List APK outputs
         shell: bash
         run: |
@@ -38,6 +50,6 @@ jobs:
       - name: Upload Universal Debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: lx-music-playqueue-universal-debug
+          name: lx-music-ultimate-universal-debug
           path: android/app/build/outputs/apk/debug/lx-music-mobile-v${{ env.PACKAGE_VERSION }}-universal.apk
           if-no-files-found: error
